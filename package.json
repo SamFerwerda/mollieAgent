@@ -2,14 +2,13 @@
   "name": "mollieagent",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./src/main.ts",
   "scripts": {
-    "start": "ts-node src/main.ts"
+    "start": "ts-node ./src/main.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "devDependencies": {
     "@types/node": "^24.7.2",
     "eslint": "^9.37.0",

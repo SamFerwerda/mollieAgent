@@ -2,24 +2,28 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "module": "nodenext",
-    "target": "esnext",
-    "lib": ["esnext"],
+  "module": "commonjs",
+    "target": "es2024",
+    "lib": ["es2024"],
     "types": ["node"],
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-
+    "moduleResolution": "node",
+    "esModuleInterop": true,
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+  }
+  ,
+  "ts-node": {
+    "experimentalSpecifierResolution": "node"
   }
 }
