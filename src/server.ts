@@ -66,8 +66,6 @@ app.get('/oauth/google/callback', async (req, res) => {
 
     // for now a session will just last as long as the first token is valid
     trustedTokens.add(tokens.access_token);
-    const expireTime = tokens.expiry_date ? tokens.expiry_date - Date.now() / 1000 : 3600;
-    setTimeout(() => { trustedTokens.delete(String(tokens.access_token)); }, expireTime * 1000);
 
     req.session.accessToken = tokens.access_token;
     res.redirect('/user');
@@ -94,6 +92,7 @@ app.get('/session', async (req, res) => {
     res.json({ accessToken, trustedUser: isTrustedUser });
   } catch (error) {
     console.error('Error verifying access token:', error);
+    delete req.session.accessToken;
     res.status(401).send('Error verifying access token, please log in.');
   }
 });
