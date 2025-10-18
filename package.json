@@ -4,13 +4,16 @@
   "description": "",
   "main": "./src/main.ts",
   "scripts": {
-    "start": "ts-node ./src/main.ts"
+    "start": "ts-node ./src/server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
     "@types/node": "^24.7.2",
+    "@types/request-promise": "^4.1.51",
     "eslint": "^9.37.0",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
@@ -19,7 +22,13 @@
   "dependencies": {
     "@openai/agents": "^0.1.9",
     "axios": "^1.12.2",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "google-auth-library": "^10.4.1",
+    "googleapis": "^164.0.0",
+    "url": "^0.11.4",
     "zod": "^3.25.76"
   }
 }
