@@ -6,7 +6,6 @@ import crypto from 'crypto';
 import express from 'express';
 import session from 'express-session';
 import { google } from 'googleapis';
-import url from 'url';
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -99,9 +98,8 @@ app.get('/session', async (req, res) => {
   }
 });
 
-// other urls than above dont exist
-app.get('*', (req, res) => {
-  res.status(404).send('Page Not Found');
+app.get('/health', (req, res) => {
+  res.send('Server is healthy');
 });
 
 const PORT = process.env.PORT || 3000;
