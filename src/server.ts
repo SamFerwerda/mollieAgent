@@ -122,11 +122,12 @@ app.get('/api/health', (req, res) => {
   res.send('Server is healthy');
 });
 
+// for local development, serve the frontend from the dist folder
 app.use(express.static('frontend/dist'));
 
 // other routes than api should serve the frontend
 app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile('index.html', { root: 'frontend/dist' });
+  res.redirect('/');
 });
 
 const PORT = process.env.PORT || 3000;
