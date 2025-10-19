@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import express from 'express';
 import session from 'express-session';
 import { google } from 'googleapis';
+import axios from 'axios';
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -29,9 +30,9 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'gikkity gakkity goo',
   resave: false,
   saveUninitialized: true
-}))
+}));
 
-app.get('/login', (req, res) => {
+app.get('/api/google/login', (req, res) => {
   const state = crypto.randomBytes(32).toString('hex');
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -43,23 +44,21 @@ app.get('/login', (req, res) => {
   res.redirect(authUrl)
 })
 
-app.get('/oauth/google/callback', async (req, res) => {
+app.get('/api/oauth/google/callback', async (req, res) => {
   const { code, state} = req.query;
-  console.log('Authorization code received:', code);
+  console.log('Authorization code received');
 
   try {
     if (!code || typeof code !== 'string') {
       return res.status(400).send('Invalid code received');
     }
-    // check for state matching in production apps
+
     if (state !== req.session.state) {
       return res.status(403).send('Invalid state received');
     }
 
-    // get token from google
     let { tokens } = await oauth2Client.getToken(code);
 
-    console.log(tokens);
     if (!tokens.access_token) {
       return res.status(400).send('No access token received');
     }
@@ -74,7 +73,7 @@ app.get('/oauth/google/callback', async (req, res) => {
   }
 })
 
-app.get('/session', async (req, res) => {
+app.get('/api/session', async (req, res) => {
   const accessToken = req.session.accessToken;
   if (!accessToken) {
     return res.status(401).send('No access token found, please log in.');
@@ -86,10 +85,14 @@ app.get('/session', async (req, res) => {
       return res.status(401).send('Invalid access token, please log in.');
     }
     
-    const { email } = await oauth2Client.getTokenInfo(accessToken);
+    const { data: { picture, email, name } } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
     const isTrustedUser = email && trustedUsers.has(email);
 
-    res.json({ accessToken, trustedUser: isTrustedUser });
+    res.json({ isAuth: true, isTrustedUser: isTrustedUser, userProfile: { picture, name } });
   } catch (error) {
     console.error('Error verifying access token:', error);
     delete req.session.accessToken;
@@ -97,8 +100,33 @@ app.get('/session', async (req, res) => {
   }
 });
 
-app.get('/health', (req, res) => {
+app.get('/api/logout', async (req, res) => {
+  const accessToken = req.session.accessToken;
+  
+  if (!accessToken) {
+    res.redirect('/');
+    return;
+  }
+
+  await oauth2Client.revokeToken(accessToken);
+  
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Error destroying session:', err);
+    }
+    res.redirect('/');
+  });
+});
+
+app.get('/api/health', (req, res) => {
   res.send('Server is healthy');
+});
+
+app.use(express.static('frontend/dist'));
+
+// other routes than api should serve the frontend
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile('index.html', { root: 'frontend/dist' });
 });
 
 const PORT = process.env.PORT || 3000;

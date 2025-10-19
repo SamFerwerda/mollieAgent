@@ -2,10 +2,14 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-  "module": "commonjs",
+    "module": "commonjs",
     "target": "es2024",
-    "lib": ["es2024"],
-    "types": ["node"],
+    "lib": [
+      "es2024"
+    ],
+    "types": [
+      "node"
+    ],
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
@@ -20,9 +24,9 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-  }
-  ,
+    "skipLibCheck": true
+  },
+   "include": ["./src"],
   "ts-node": {
     "experimentalSpecifierResolution": "node"
   }
