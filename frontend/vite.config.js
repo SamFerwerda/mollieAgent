@@ -6,6 +6,6 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [tailwindcss(), vue()],
   build: {
-    outDir: '../public'
+    outDir: 'dist'
   }
 })

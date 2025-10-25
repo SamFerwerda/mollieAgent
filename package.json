@@ -2,7 +2,7 @@
   "name": "mollieagent",
   "version": "1.0.0",
   "description": "",
-  "main": "./src/main.ts",
+  "main": "./src/server.ts",
   "scripts": {
     "start": "ts-node ./src/server.ts"
   },

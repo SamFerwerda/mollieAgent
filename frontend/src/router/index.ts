@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import LoginView from '../views/LoginView.vue'
 import ChatView from '../views/ChatView.vue'
+import { useProfileStore } from '../stores/user'
 
 const routes = [
   { path: '/', name: 'Login', component: LoginView },
@@ -26,7 +27,9 @@ router.beforeEach(async (to, from, next) => {
       const data = await res.json()
 
       if (data.isTrustedUser) {
-        sessionStorage.setItem('userProfile', JSON.stringify(data.userProfile));
+        const { setUser } = useProfileStore();
+
+        setUser(data.userProfile);
         next()
       } else {
         next('/no-access')

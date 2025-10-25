@@ -3,8 +3,8 @@ import { allCustomers, updateCustomerInfo, getCustomerById, removeCustomerById }
 
 export const customerAgent = new Agent({
   name: 'Customer Agent',
-  handoffDescription: 'Handles questions related to customers.',
-  instructions: 'You assist users in finding customers and updating their information if required.',
+  handoffDescription: 'Handles queries and actions related to customers.',
+  instructions: 'You assist users in finding customers and updating their information if required. If you provide any styling to your answer, do so using html tags.',
   tools: [
     allCustomers, updateCustomerInfo, getCustomerById, removeCustomerById
   ]

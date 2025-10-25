@@ -3,8 +3,8 @@ import { getAllSubscriptions, getSubscriptionsOfCustomer } from '../tools/subscr
 
 export const subscriptionAgent = new Agent({
   name: 'Subscriptions Agent',
-  handoffDescription: 'Handles questions related to subscriptions.',
-  instructions: `You assist in retrieving subscription information. If the question is outside of your scope, hand off to the orchestrator.`,
+  handoffDescription: 'Handles queries and actions related to subscriptions.',
+  instructions: `You assist in retrieving subscription information. If the question is outside of your scope, hand off to the orchestrator. If you provide any styling to your answer, do so using html tags.`,
   tools: [
     getAllSubscriptions, getSubscriptionsOfCustomer
   ]

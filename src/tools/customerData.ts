@@ -18,7 +18,7 @@ export const allCustomers = tool({
         },
       });
     return response.data._embedded.customers.map((customer: any) => ({
-        id: customer.id,
+        customerId: customer.id,
         name: customer.name,
         email: customer.email,
         metadata: customer.metadata,
@@ -26,22 +26,23 @@ export const allCustomers = tool({
   } catch (error) {
     return `Error fetching customers: ${JSON.stringify(error)}`;
   }
-}});
+}
+});
 
 /**
- * Get single customer by ID.
- * @param id - The ID of the customer to retrieve.
+ * Get single customer by customerId.
+ * @param customerId - The ID of the customer to retrieve.
  * @return The customer data or an error message.
  */
 export const getCustomerById = tool({
-  name: 'get_customer_by_id',
-  description: 'Retrieve a single mollie customer by ID.',
+  name: 'get_customer_by_customerId',
+  description: 'Retrieve a single mollie customer by its customerId',
   parameters: z.object({
-    id: z.string().min(1).max(100),
+    customerId: z.string().describe('The mollie ID of the customer to retrieve. In the format of cst_*').min(1).max(100),
   }),
-  execute: async ({ id }) => {
+  execute: async ({ customerId }) => {
     try {
-      const response = await axios.get(`https://api.mollie.com/v2/customers/${id}`, {
+      const response = await axios.get(`https://api.mollie.com/v2/customers/${customerId}`, {
         headers: {
           Authorization: `Bearer ${process.env.MOLLIE_API_KEY}`,
         },
@@ -53,19 +54,20 @@ export const getCustomerById = tool({
 }});
 
 /**
- * Remove single customer by ID.
- * @param id - The ID of the customer to remove.
+ * Remove single customer by customerId.
+ * @param customerId - The ID of the customer to remove.
  * @return A success message or an error message.
  */
 export const removeCustomerById = tool({
-  name: 'remove_customer_by_id',
-  description: 'Remove a single mollie customer by ID. This action is irreversible.',
+  name: 'remove_customer_by_customerId',
+  description: 'Remove a single mollie customer by customerId. This action is irreversible.',
   parameters: z.object({
-    id: z.string().min(1).max(100),
+    customerId: z.string().min(1).max(100),
   }),
-  execute: async ({ id }) => {
+  needsApproval: true,
+  execute: async ({ customerId }) => {
     try {
-      const response = await axios.delete(`https://api.mollie.com/v2/customers/${id}`, {
+      const response = await axios.delete(`https://api.mollie.com/v2/customers/${customerId}`, {
         headers: {
           Authorization: `Bearer ${process.env.MOLLIE_API_KEY}`,
         },
@@ -78,7 +80,7 @@ export const removeCustomerById = tool({
 
 /**
  * Update customer information provided by the agent.
- * @param id - The ID of the customer to update.
+ * @param customerId - The ID of the customer to update.
  * @param email - The new email of the customer (optional).
  * @param name - The new name of the customer (optional).
  * @param metadata - The new metadata for the customer (optional).
@@ -87,16 +89,17 @@ export const removeCustomerById = tool({
 export const updateCustomerInfo = tool({
   name: 'update_customer_info',
   description: 'Update customer information',
+  needsApproval: true,
   parameters: z.object({
-    id: z.string(),
+    customerId: z.string(),
     email: z.string().email().nullable().optional(),
     name: z.string().min(2).max(100).nullable().optional(),
     metadata: z.record(z.string()).nullable().optional(),
   }),
   execute: async (params) => {
     try {
-        const { id, ...updateData } = params;
-        await axios.patch(`https://api.mollie.com/v2/customers/${id}`, {
+        const { customerId, ...updateData } = params;
+        await axios.patch(`https://api.mollie.com/v2/customers/${customerId}`, {
             ...updateData
         }, {
             headers: {

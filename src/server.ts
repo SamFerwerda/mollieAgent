@@ -1,12 +1,11 @@
 import 'dotenv/config';
-import { Agent, AgentInputItem, run, StreamedRunResult } from '@openai/agents';
-import { orchestrator } from './agents/orchestrator';
-import readline from 'node:readline/promises';
 import crypto from 'crypto';
 import express from 'express';
 import session from 'express-session';
 import { google } from 'googleapis';
 import axios from 'axios';
+import { handleNewMessage } from './services/chatService';
+import { AgentInputItem, RunToolApprovalItem } from '@openai/agents';
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -20,7 +19,11 @@ const trustedUsers = new Set<string>(arrayOfTrustedUsers);
 declare module 'express-session' {
   export interface SessionData {
     accessToken: string;
-    state: string;
+    loginState: string;
+    interruption: RunToolApprovalItem | null;
+    interruptions: Array<RunToolApprovalItem>;
+    state: any;
+    inputs: Array<AgentInputItem>;
   }
 }
 
@@ -40,7 +43,7 @@ app.get('/api/google/login', (req, res) => {
     scope: ['https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email'],
     state
   });
-  req.session.state = state;
+  req.session.loginState = state;
   res.redirect(authUrl)
 })
 
@@ -53,7 +56,7 @@ app.get('/api/oauth/google/callback', async (req, res) => {
       return res.status(400).send('Invalid code received');
     }
 
-    if (state !== req.session.state) {
+    if (state !== req.session.loginState) {
       return res.status(403).send('Invalid state received');
     }
 
@@ -67,7 +70,7 @@ app.get('/api/oauth/google/callback', async (req, res) => {
     trustedTokens.add(tokens.access_token);
 
     req.session.accessToken = tokens.access_token;
-    res.redirect('/user');
+    res.redirect('/chat');
   } catch (err) {
     res.send('Error validating access token');
   }
@@ -118,6 +121,39 @@ app.get('/api/logout', async (req, res) => {
   });
 });
 
+app.delete('/api/clear', express.json(), async (req, res) => {
+  const { accessToken } = req.session;
+  if (!accessToken || !trustedTokens.has(accessToken)) {
+    return res.status(401).send('Unauthorized');
+  }
+  delete req.session.state;
+  delete req.session.interruptions;
+  delete req.session.interruption;
+  req.session.inputs = [];
+  res.json({ success: true });
+});
+
+app.post('/api/message', express.json(), async (req, res) => {
+  const { message } = req.body;
+  const { accessToken } = req.session;
+
+  if (!accessToken || !trustedTokens.has(accessToken)) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  if (!message) {
+    return res.status(400).send('Message is required');
+  }
+
+  try {
+    const response = await handleNewMessage(message, req.session);
+    res.json(response);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).send('Error sending message');
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.send('Server is healthy');
 });
@@ -125,9 +161,9 @@ app.get('/api/health', (req, res) => {
 // for local development, serve the frontend from the dist folder
 app.use(express.static('frontend/dist'));
 
-// other routes than api should serve the frontend
+// other routes than api should serve the frontend from frontend dist folder
 app.get(/^\/(?!api).*/, (req, res) => {
-  res.redirect('/');
+  res.sendFile('index.html', { root: 'frontend/dist' });
 });
 
 const PORT = process.env.PORT || 3000;
@@ -135,43 +171,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
-
-// const INITIAL_PROMPT = `Hello, I am MollieGPT. I can help you with information about customers and their subscriptions. How can I assist you today? \n\n`;
-
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-// });
-
-// async function main(){
-//   let result: StreamedRunResult<any, Agent<any, any>> | undefined;
-  
-//   let userquery = await rl.question(INITIAL_PROMPT);
-//   const initialInput: AgentInputItem[] = [{role: 'user', content: userquery}];
-//   let session: { inputs: AgentInputItem[]} = { inputs: initialInput };
-
-//   while (true) {
-//     const inputs = session.inputs;
-    
-//     result = await run(
-//         orchestrator,
-//         inputs,
-//         { stream: true }
-//     );
-
-//     result.toTextStream({ compatibleWithNodeStreams: true }).pipe(process.stdout);
-//     await result.completed;
-
-//     process.stdout.write('\n\n\n');
-//     userquery = await rl.question('');
-
-//     session = {
-//       inputs: [...result.history, {role: 'user', content: userquery}]
-//     }
-//   }
-// }
-
-// main().catch((error) => {
-//   console.error('Error in running the main function', error);
-//   process.exit(1);
-// });
